@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-const DEV_PASSWORD = "diogo";
-const GOOGLE_SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/1s6I49UyiTofCDZ-ARHix7a49JmS2h01nIYRB66i0fns/exec"; // paste your Apps Script URL here
+const DEV_PASSWORD = "athena2024";
+const GOOGLE_SHEETS_WEBHOOK_URL = ""; // paste your Apps Script URL here
 
 // ─── ICONS ────────────────────────────────────────────────────────────────────
 const Icon = ({ path, size = 20, strokeWidth = 1.5 }) => (
@@ -799,6 +799,7 @@ function DevLogin({ onLogin, onBack }) {
   const [stage, setStage] = useState("password");
   const [pw, setPw] = useState("");
   const [code, setCode] = useState("");
+  const [token, setToken] = useState("");
   const [error, setError] = useState("");
   const [show, setShow] = useState(false);
   const [sending, setSending] = useState(false);
@@ -809,8 +810,9 @@ function DevLogin({ onLogin, onBack }) {
     setSending(true); setError("");
     try {
       const res = await fetch("/api/send-code", { method: "POST" });
-      if (res.ok) { setStage("code"); }
-      else { setError("Failed to send email. Check Gmail setup in Vercel."); }
+      const data = await res.json();
+      if (res.ok && data.token) { setToken(data.token); setStage("code"); }
+      else { setError(data.error || "Failed to send email. Check Gmail setup in Vercel."); }
     } catch { setError("Network error."); }
     setSending(false);
   };
@@ -821,7 +823,7 @@ function DevLogin({ onLogin, onBack }) {
       const res = await fetch("/api/verify-code", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ code }),
+        body: JSON.stringify({ code, token }),
       });
       if (res.ok) { onLogin(); }
       else { setError("Invalid or expired code."); setCode(""); }
