@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-const DEV_PASSWORD = "athena2024";
+const DEV_PASSWORD = "diogo";
 const GOOGLE_SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/1s6I49UyiTofCDZ-ARHix7a49JmS2h01nIYRB66i0fns/exec"; // paste your Apps Script URL here
 
 // ─── ICONS ────────────────────────────────────────────────────────────────────
@@ -641,7 +641,10 @@ function ResultsContent({data, result, savedId, devMode=false}){
           <>
             <div className="gs">
               <Gauge score={result.composite} color={result.color}/>
-              <div className={`sn c${cc}`}>{result.composite}<span style={{fontSize:20}}>/100</span></div>
+              <div className={`sn c${cc}`} style={{display:"flex",alignItems:"baseline",justifyContent:"center",gap:4}}>
+                <span>{result.composite}</span>
+                <span style={{fontSize:20,opacity:0.5}}>/100</span>
+              </div>
               <div className={`cb2 ${cc}`}>
                 <Icon path={result.composite>=80?I.star:result.composite>=60?I.trending:result.composite>=40?I.alert:I.x} size={12}/>
                 {result.classification}
@@ -697,6 +700,12 @@ function ResultsContent({data, result, savedId, devMode=false}){
   );
 }
 
+// ─── LOCAL STORAGE HELPERS ────────────────────────────────────────────────────
+function lsGet(key){ try{ const v=localStorage.getItem(key); return v?JSON.parse(v):null; }catch{ return null; } }
+function lsSet(key,val){ try{ localStorage.setItem(key,JSON.stringify(val)); return true; }catch{ return false; } }
+function lsDel(key){ try{ localStorage.removeItem(key); return true; }catch{ return false; } }
+function lsList(prefix){ try{ return Object.keys(localStorage).filter(k=>k.startsWith(prefix)); }catch{ return []; } }
+
 // ─── STEP RESULTS ─────────────────────────────────────────────────────────────
 function StepResults({data, result, onReset}){
   const [saved,setSaved]=useState(false);
@@ -718,7 +727,7 @@ function StepResults({data, result, onReset}){
           score:result.composite, classification:result.classification,
           color:result.color, data, result,
         };
-        await window.storage.set(`assessment:${rid.current}`,JSON.stringify(entry),true);
+        lsSet(`assessment:${rid.current}`, entry);
         await syncToSheets(entry);
         setSaved(true);
       }catch(e){console.warn("Auto-save failed",e);}
@@ -751,17 +760,12 @@ function ClientArchive(){
   const cc2=(c)=>c==="emerald"?"em":c==="blue"?"bl":c==="amber"?"am":"rd2";
 
   useEffect(()=>{
-    (async()=>{
-      try{
-        const keys=await window.storage.list("assessment:",true);
-        const arr=[];
-        for(const key of(keys?.keys||[])){
-          try{const r=await window.storage.get(key,true);if(r?.value)arr.push(JSON.parse(r.value));}catch{}
-        }
-        arr.sort((a,b)=>new Date(b.date)-new Date(a.date));
-        setItems(arr);
-      }catch{setItems([]);}
-    })();
+    try{
+      const keys=lsList("assessment:");
+      const arr=keys.map(k=>lsGet(k)).filter(Boolean);
+      arr.sort((a,b)=>new Date(b.date)-new Date(a.date));
+      setItems(arr);
+    }catch{setItems([]);}
   },[]);
 
   if(sel) return(
@@ -889,13 +893,10 @@ function DevDashboard(){
   const tgC=(c)=>c==="emerald"?"tge":c==="blue"?"tgb":c==="amber"?"tga":"tgr";
   const bcs={financial:"#B8CC2A",operational:"#3B82F6",strategic:"#8B5CF6",risk:"#EF4444"};
 
-  const load=async()=>{
+  const load=()=>{
     try{
-      const keys=await window.storage.list("assessment:",true);
-      const arr=[];
-      for(const key of(keys?.keys||[])){
-        try{const r=await window.storage.get(key,true);if(r?.value)arr.push(JSON.parse(r.value));}catch{}
-      }
+      const keys=lsList("assessment:");
+      const arr=keys.map(k=>lsGet(k)).filter(Boolean);
       arr.sort((a,b)=>new Date(b.date)-new Date(a.date));
       setItems(arr);
     }catch{setItems([]);}
@@ -905,7 +906,7 @@ function DevDashboard(){
   const del=async(id,e)=>{
     if(e)e.stopPropagation();
     if(!window.confirm("Permanently delete?"))return;
-    try{await window.storage.delete(`assessment:${id}`,true);if(sel?.id===id)setSel(null);load();}catch{}
+    try{lsDel(`assessment:${id}`);if(sel?.id===id)setSel(null);load();}catch{}
   };
 
   const filtered=(items||[]).filter(a=>{
