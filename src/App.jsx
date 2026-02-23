@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const DEV_PASSWORD = "diogo";
-const GOOGLE_SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/1s6I49UyiTofCDZ-ARHix7a49JmS2h01nIYRB66i0fns/exec"; // paste your Apps Script URL here
+const GOOGLE_SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz_IYB7bXCJKCotcwkbKxLhm8f9BBge_ZpO_tLczmYgt8oFhjA9ImpaORzmhJzLP74LKA/exec"; // paste your Apps Script URL here
 
 // ─── ICONS ────────────────────────────────────────────────────────────────────
 const Icon = ({ path, size = 20, strokeWidth = 1.5 }) => (
