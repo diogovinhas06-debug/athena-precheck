@@ -3,9 +3,6 @@ import { useState, useEffect, useRef } from "react";
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const DEV_PASSWORD = "athena2024";
 const GOOGLE_SHEETS_WEBHOOK_URL = ""; // paste your Apps Script URL here
-// To open the dev dashboard: just TYPE this word anywhere on the page (not in a field)
-// Clients will never find this — there is zero visual hint it exists
-const DEV_SECRET_KEYWORD = "athenadev";
 
 // ─── ICONS ────────────────────────────────────────────────────────────────────
 const Icon = ({ path, size = 20, strokeWidth = 1.5 }) => (
@@ -164,7 +161,6 @@ const CSS = `
   :root{--lm:#E4F577;--lml:#EEFA95;--lmp:#F5FCC0;--lmd:#B8CC2A;--tx:#1C1C1C;--mt:#666;--br:#E8E8E8;--dv:#0F1117;--dvs:#1A1D26;--dvb:#2A2D3A;--dva:#E4F577;}
   *{box-sizing:border-box;margin:0;padding:0;}
   body{font-family:'DM Sans',sans-serif;background:#F9F9F9;color:var(--tx);min-height:100vh;}
-  /* CLIENT */
   .sh{min-height:100vh;background:#F9F9F9;display:flex;flex-direction:column;}
   .hd{padding:14px 36px;border-bottom:2px solid var(--lm);display:flex;align-items:center;gap:13px;background:#fff;position:sticky;top:0;z-index:100;box-shadow:0 1px 6px rgba(0,0,0,.06);}
   .lg{width:38px;height:38px;background:var(--lm);border-radius:9px;display:flex;align-items:center;justify-content:center;font-weight:700;font-size:14px;flex-shrink:0;font-family:'Playfair Display',serif;}
@@ -173,6 +169,8 @@ const CSS = `
   .nv{margin-left:auto;display:flex;gap:3px;background:#F3F3F3;border-radius:9px;padding:3px;}
   .nt{padding:6px 14px;border-radius:7px;font-size:12px;font-weight:600;cursor:pointer;border:none;transition:all .2s;font-family:'DM Sans',sans-serif;display:flex;align-items:center;gap:5px;color:var(--mt);background:transparent;}
   .nt.on{background:#fff;color:var(--tx);box-shadow:0 1px 4px rgba(0,0,0,.09);}
+  .nt.dev{color:#7AAA10;}
+  .nt.dev.on{background:#1C1C1C;color:var(--lm);}
   .ct{flex:1;display:flex;align-items:flex-start;justify-content:center;padding:32px 18px 56px;}
   .wp{width:100%;max-width:740px;}
   .pb{display:flex;align-items:center;margin-bottom:28px;}
@@ -236,7 +234,7 @@ const CSS = `
   .em{background:#ECFDF5;color:#065F46;border:1.5px solid #A7F3D0;}
   .bl{background:#EFF6FF;color:#1E40AF;border:1.5px solid #BFDBFE;}
   .am{background:#FFFBEB;color:#92400E;border:1.5px solid #FDE68A;}
-  .rd{background:#FEF2F2;color:#991B1B;border:1.5px solid #FECACA;}
+  .rd2{background:#FEF2F2;color:#991B1B;border:1.5px solid #FECACA;}
   .sn{font-family:'Playfair Display',serif;font-size:48px;font-weight:700;line-height:1;margin-bottom:5px;}
   .cem{color:#059669;}.cbl{color:#2563EB;}.cam{color:#D97706;}.crd{color:#DC2626;}
   .sr2{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:22px;}
@@ -351,6 +349,7 @@ const CSS = `
   .dle{color:#F87171;font-size:12px;margin-top:10px;}
   .dlb{width:100%;margin-top:18px;padding:12px;background:var(--dva);color:var(--tx);border:none;border-radius:8px;font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;cursor:pointer;}
   .dlb:hover{opacity:.85;}
+  .dlb:disabled{opacity:.5;cursor:not-allowed;}
   /* PRINT */
   @media print{
     .hd,.nv,.pb,.br2,.ab,.ar,.rtg,.no-print{display:none!important;}
@@ -606,7 +605,7 @@ function ResultsContent({data, result, savedId, devMode=false}){
   const dateStr=new Date().toLocaleDateString("en-US",{dateStyle:"long"});
   const country=COUNTRIES.find(c=>c.code===data.clientCountry);
   const fullPhone=country?`${country.dial} ${data.clientPhone||""}`:data.clientPhone||"";
-  const cc=result.color==="emerald"?"em":result.color==="blue"?"bl":result.color==="amber"?"am":"rd";
+  const cc=result.color==="emerald"?"em":result.color==="blue"?"bl":result.color==="amber"?"am":"rd2";
   const bds=[{k:"financial",l:"Financial",w:"35%",c:"#B8CC2A"},{k:"operational",l:"Operational",w:"25%",c:"#3B82F6"},{k:"strategic",l:"Strategic",w:"25%",c:"#8B5CF6"},{k:"risk",l:"Risk",w:"15%",c:"#EF4444"}];
   return(
     <div>
@@ -698,7 +697,7 @@ function ResultsContent({data, result, savedId, devMode=false}){
   );
 }
 
-// ─── STEP RESULTS (auto-saves) ────────────────────────────────────────────────
+// ─── STEP RESULTS ─────────────────────────────────────────────────────────────
 function StepResults({data, result, onReset}){
   const [saved,setSaved]=useState(false);
   const [saving,setSaving]=useState(false);
@@ -719,7 +718,7 @@ function StepResults({data, result, onReset}){
           score:result.composite, classification:result.classification,
           color:result.color, data, result,
         };
-        await window.storage.set(`assessment:${rid.current}`,JSON.stringify(entry),true); // shared so dev sees all
+        await window.storage.set(`assessment:${rid.current}`,JSON.stringify(entry),true);
         await syncToSheets(entry);
         setSaved(true);
       }catch(e){console.warn("Auto-save failed",e);}
@@ -737,9 +736,6 @@ function StepResults({data, result, onReset}){
             {saved&&<div className="sv"><Icon path={I.check} size={13}/> Saved — our team will be in touch</div>}
           </div>
           <button className="bp bsc" onClick={onReset}><Icon path={I.plus} size={13}/> New Assessment</button>
-            <button className={`nav-tab dev-tab ${page==="dev"?"active":""}`} onClick={()=>{setPage("dev");window.scrollTo(0,0);}}>
-    <Icon path={icons.lock} size={12}/> Dev
-  </button>
         </div>
       </div>
     </div>
@@ -752,7 +748,7 @@ function ClientArchive(){
   const [sel,setSel]=useState(null);
   const cm={emerald:"#059669",blue:"#2563EB",amber:"#D97706",red:"#DC2626"};
   const bm={emerald:"bge",blue:"bgb",amber:"bga",red:"bgr"};
-  const cc2=(c)=>c==="emerald"?"em":c==="blue"?"bl":c==="amber"?"am":"rd";
+  const cc2=(c)=>c==="emerald"?"em":c==="blue"?"bl":c==="amber"?"am":"rd2";
 
   useEffect(()=>{
     (async()=>{
@@ -798,8 +794,8 @@ function ClientArchive(){
   );
 }
 
-// ─── DEV LOGIN ────────────────────────────────────────────────────────────────
-function DevLogin({ onLogin }) {
+// ─── DEV LOGIN (Gmail 2FA) ────────────────────────────────────────────────────
+function DevLogin({ onLogin, onBack }) {
   const [stage, setStage] = useState("password");
   const [pw, setPw] = useState("");
   const [code, setCode] = useState("");
@@ -834,36 +830,36 @@ function DevLogin({ onLogin }) {
   };
 
   return (
-    <div className="dev-login">
-      <div className="dev-login-card">
-        <div className="dev-login-icon">Aθ</div>
-        <div className="dev-login-title">Developer Access</div>
+    <div className="dlg2">
+      <div className="dlc">
+        <div className="dlic">Aθ</div>
+        <div className="dlt">Developer Access</div>
         {stage === "password" ? (
           <>
-            <div className="dev-login-sub">Enter your admin password to continue.</div>
+            <div className="dls">Enter your admin password to continue.</div>
             <div style={{position:"relative"}}>
-              <input className="dev-login-field" type={show?"text":"password"} value={pw}
+              <input className="dlf" type={show?"text":"password"} value={pw}
                 onChange={e=>{setPw(e.target.value);setError("");}}
                 onKeyDown={e=>e.key==="Enter"&&submitPassword()}
                 placeholder="••••••••" autoFocus/>
               <button onClick={()=>setShow(v=>!v)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#555",display:"flex"}}>
-                <Icon path={show?icons.eyeOff:icons.eye} size={14}/>
+                <Icon path={show?I.eyeOff:I.eye} size={14}/>
               </button>
             </div>
-            {error && <div className="dev-login-error">{error}</div>}
-            <button className="dev-login-btn" onClick={submitPassword} disabled={sending}>
-              {sending ? "Sending code to your Gmail..." : "Continue"}
+            {error && <div className="dle">{error}</div>}
+            <button className="dlb" onClick={submitPassword} disabled={sending}>
+              {sending ? "Sending code to Gmail..." : "Continue"}
             </button>
           </>
         ) : (
           <>
-            <div className="dev-login-sub">A 6-digit code was sent to your Gmail. Enter it below.</div>
-            <input className="dev-login-field" type="text" value={code}
+            <div className="dls">A 6-digit code was sent to your Gmail. Enter it below.</div>
+            <input className="dlf" type="text" value={code}
               onChange={e=>{setCode(e.target.value);setError("");}}
               onKeyDown={e=>e.key==="Enter"&&submitCode()}
               placeholder="000000" maxLength={6} autoFocus/>
-            {error && <div className="dev-login-error">{error}</div>}
-            <button className="dev-login-btn" onClick={submitCode} disabled={verifying}>
+            {error && <div className="dle">{error}</div>}
+            <button className="dlb" onClick={submitCode} disabled={verifying}>
               {verifying ? "Verifying..." : "Access Dashboard"}
             </button>
             <button onClick={()=>{setStage("password");setError("");}} style={{marginTop:10,background:"none",border:"none",color:"#555",font:"inherit",cursor:"pointer",fontSize:12}}>
@@ -871,17 +867,22 @@ function DevLogin({ onLogin }) {
             </button>
           </>
         )}
+        {onBack && (
+          <button onClick={onBack} style={{marginTop:8,background:"none",border:"none",color:"#444",font:"inherit",cursor:"pointer",fontSize:12}}>
+            ← Back to app
+          </button>
+        )}
       </div>
     </div>
   );
 }
+
 // ─── DEV DASHBOARD ────────────────────────────────────────────────────────────
 function DevDashboard(){
   const [items,setItems]=useState(null);
   const [sel,setSel]=useState(null);
   const [filter,setFilter]=useState("all");
   const [search,setSearch]=useState("");
-  const cc=(c)=>c==="emerald"?"e":c==="blue"?"b":c==="amber"?"a":"r";
   const spC=(c)=>c==="emerald"?"spe":c==="blue"?"spb":c==="amber"?"spa":"spr";
   const tgC=(c)=>c==="emerald"?"tge":c==="blue"?"tgb":c==="amber"?"tga":"tgr";
   const bcs={financial:"#B8CC2A",operational:"#3B82F6",strategic:"#8B5CF6",risk:"#EF4444"};
@@ -1029,25 +1030,14 @@ export default function App(){
   const [step,setStep]=useState(0);
   const [data,setData]=useState({});
   const [result,setResult]=useState(null);
-  const keyBuf=useRef("");
-
-  // ── Secret keyword: type "athenadev" anywhere (not in a field) → opens dev login ──
-  // Clients have zero indication this exists — no button, no hint, nothing
-  useEffect(()=>{
-    const h=(e)=>{
-      if(["INPUT","TEXTAREA","SELECT"].includes(document.activeElement?.tagName))return;
-      keyBuf.current=(keyBuf.current+e.key).slice(-DEV_SECRET_KEYWORD.length);
-      if(keyBuf.current===DEV_SECRET_KEYWORD){setMode("devlogin");keyBuf.current="";}
-    };
-    window.addEventListener("keydown",h);
-    return()=>window.removeEventListener("keydown",h);
-  },[]);
 
   const goNext=()=>{if(step===6)setResult(calculateScore(data));setStep(s=>s+1);window.scrollTo(0,0);};
   const goBack=()=>{setStep(s=>s-1);window.scrollTo(0,0);};
   const reset=()=>{setStep(0);setData({});setResult(null);};
 
-  if(mode==="devlogin") return(<><style>{CSS}</style><DevLogin onLogin={()=>setMode("dev")} onBack={()=>setMode("client")}/></>);
+  if(mode==="devlogin") return(
+    <><style>{CSS}</style><DevLogin onLogin={()=>setMode("dev")} onBack={()=>setMode("client")}/></>
+  );
 
   if(mode==="dev") return(
     <>
@@ -1059,7 +1049,7 @@ export default function App(){
           <div className="dbg">DEV</div>
           <div style={{marginLeft:"auto",display:"flex",gap:9}}>
             <button className="db2 dbg2" onClick={()=>setMode("client")}><Icon path={I.eye} size={12}/> View App</button>
-            <button className="db2 dbg2" onClick={()=>setMode("client")}><Icon path={I.logout} size={12}/> Sign Out</button>
+            <button className="db2 dbg2" onClick={()=>{setMode("client");}}><Icon path={I.logout} size={12}/> Sign Out</button>
           </div>
         </div>
         <DevDashboard/>
@@ -1076,8 +1066,15 @@ export default function App(){
           <div className="lg">Aθ</div>
           <div className="ht"><h1>ATHENA Pre-Check</h1><p>Project Viability Diagnostic</p></div>
           <div className="nv no-print">
-            <button className={`nt ${page==="wizard"?"on":""}`} onClick={()=>{setPage("wizard");window.scrollTo(0,0);}}><Icon path={I.file} size={12}/> Assessment</button>
-            <button className={`nt ${page==="archive"?"on":""}`} onClick={()=>{setPage("archive");window.scrollTo(0,0);}}><Icon path={I.archive} size={12}/> My Results</button>
+            <button className={`nt ${page==="wizard"?"on":""}`} onClick={()=>{setPage("wizard");window.scrollTo(0,0);}}>
+              <Icon path={I.file} size={12}/> Assessment
+            </button>
+            <button className={`nt ${page==="archive"?"on":""}`} onClick={()=>{setPage("archive");window.scrollTo(0,0);}}>
+              <Icon path={I.archive} size={12}/> My Results
+            </button>
+            <button className={`nt dev ${mode==="dev"?"on":""}`} onClick={()=>{setMode("devlogin");window.scrollTo(0,0);}}>
+              <Icon path={I.lock} size={12}/> Dev
+            </button>
           </div>
         </header>
         <div className="ct">
