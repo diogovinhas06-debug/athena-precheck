@@ -737,6 +737,9 @@ function StepResults({data, result, onReset}){
             {saved&&<div className="sv"><Icon path={I.check} size={13}/> Saved — our team will be in touch</div>}
           </div>
           <button className="bp bsc" onClick={onReset}><Icon path={I.plus} size={13}/> New Assessment</button>
+            <button className={`nav-tab dev-tab ${page==="dev"?"active":""}`} onClick={()=>{setPage("dev");window.scrollTo(0,0);}}>
+    <Icon path={icons.lock} size={12}/> Dev
+  </button>
         </div>
       </div>
     </div>
