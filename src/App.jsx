@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
 const DEV_PASSWORD = "athena2024";
-const GOOGLE_SHEETS_WEBHOOK_URL = ""; // paste your Apps Script URL here
+const GOOGLE_SHEETS_WEBHOOK_URL = "https://athena-precheckk.vercel.app/"; // paste your Apps Script URL here
 
 // ─── ICONS ────────────────────────────────────────────────────────────────────
 const Icon = ({ path, size = 20, strokeWidth = 1.5 }) => (
