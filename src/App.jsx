@@ -796,32 +796,82 @@ function ClientArchive(){
 }
 
 // ─── DEV LOGIN ────────────────────────────────────────────────────────────────
-function DevLogin({onLogin, onBack}){
-  const [pw,setPw]=useState("");
-  const [err,setErr]=useState("");
-  const [show,setShow]=useState(false);
-  const attempt=()=>{
-    if(pw===DEV_PASSWORD){onLogin();}
-    else{setErr("Incorrect password. Access denied.");setPw("");}
+function DevLogin({ onLogin }) {
+  const [stage, setStage] = useState("password");
+  const [pw, setPw] = useState("");
+  const [code, setCode] = useState("");
+  const [error, setError] = useState("");
+  const [show, setShow] = useState(false);
+  const [sending, setSending] = useState(false);
+  const [verifying, setVerifying] = useState(false);
+
+  const submitPassword = async () => {
+    if (pw !== DEV_PASSWORD) { setError("Incorrect password."); setPw(""); return; }
+    setSending(true); setError("");
+    try {
+      const res = await fetch("/api/send-code", { method: "POST" });
+      if (res.ok) { setStage("code"); }
+      else { setError("Failed to send email. Check Gmail setup in Vercel."); }
+    } catch { setError("Network error."); }
+    setSending(false);
   };
-  return(
-    <div className="dlg2">
-      <div className="dlc">
-        <div className="dlic">Aθ</div>
-        <div className="dlt">Developer Access</div>
-        <div className="dls">Restricted area. Authorised personnel only.</div>
-        <div style={{position:"relative"}}>
-          <input className="dlf" type={show?"text":"password"} value={pw} onChange={e=>{setPw(e.target.value);setErr("");}} onKeyDown={e=>e.key==="Enter"&&attempt()} placeholder="••••••••" autoFocus/>
-          <button onClick={()=>setShow(v=>!v)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#555",display:"flex"}}><Icon path={show?I.eyeOff:I.eye} size={14}/></button>
-        </div>
-        {err&&<div className="dle">{err}</div>}
-        <button className="dlb" onClick={attempt}>Access Dashboard</button>
-        <button onClick={onBack} style={{marginTop:14,background:"none",border:"none",color:"#444",font:"inherit",cursor:"pointer",fontSize:12}}>← Back to app</button>
+
+  const submitCode = async () => {
+    setVerifying(true); setError("");
+    try {
+      const res = await fetch("/api/verify-code", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ code }),
+      });
+      if (res.ok) { onLogin(); }
+      else { setError("Invalid or expired code."); setCode(""); }
+    } catch { setError("Network error."); }
+    setVerifying(false);
+  };
+
+  return (
+    <div className="dev-login">
+      <div className="dev-login-card">
+        <div className="dev-login-icon">Aθ</div>
+        <div className="dev-login-title">Developer Access</div>
+        {stage === "password" ? (
+          <>
+            <div className="dev-login-sub">Enter your admin password to continue.</div>
+            <div style={{position:"relative"}}>
+              <input className="dev-login-field" type={show?"text":"password"} value={pw}
+                onChange={e=>{setPw(e.target.value);setError("");}}
+                onKeyDown={e=>e.key==="Enter"&&submitPassword()}
+                placeholder="••••••••" autoFocus/>
+              <button onClick={()=>setShow(v=>!v)} style={{position:"absolute",right:12,top:"50%",transform:"translateY(-50%)",background:"none",border:"none",cursor:"pointer",color:"#555",display:"flex"}}>
+                <Icon path={show?icons.eyeOff:icons.eye} size={14}/>
+              </button>
+            </div>
+            {error && <div className="dev-login-error">{error}</div>}
+            <button className="dev-login-btn" onClick={submitPassword} disabled={sending}>
+              {sending ? "Sending code to your Gmail..." : "Continue"}
+            </button>
+          </>
+        ) : (
+          <>
+            <div className="dev-login-sub">A 6-digit code was sent to your Gmail. Enter it below.</div>
+            <input className="dev-login-field" type="text" value={code}
+              onChange={e=>{setCode(e.target.value);setError("");}}
+              onKeyDown={e=>e.key==="Enter"&&submitCode()}
+              placeholder="000000" maxLength={6} autoFocus/>
+            {error && <div className="dev-login-error">{error}</div>}
+            <button className="dev-login-btn" onClick={submitCode} disabled={verifying}>
+              {verifying ? "Verifying..." : "Access Dashboard"}
+            </button>
+            <button onClick={()=>{setStage("password");setError("");}} style={{marginTop:10,background:"none",border:"none",color:"#555",font:"inherit",cursor:"pointer",fontSize:12}}>
+              ← Re-enter password
+            </button>
+          </>
+        )}
       </div>
     </div>
   );
 }
-
 // ─── DEV DASHBOARD ────────────────────────────────────────────────────────────
 function DevDashboard(){
   const [items,setItems]=useState(null);
