@@ -1,8 +1,8 @@
 import { useState, useEffect, useRef } from "react";
 
 // ─── CONFIG ───────────────────────────────────────────────────────────────────
-const DEV_PASSWORD = "diogo";
-const GOOGLE_SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz_IYB7bXCJKCotcwkbKxLhm8f9BBge_ZpO_tLczmYgt8oFhjA9ImpaORzmhJzLP74LKA/exec"; // paste your Apps Script URL here
+const DEV_PASSWORD = "Lqrlt100@dp";
+const GOOGLE_SHEETS_WEBHOOK_URL = "https://script.google.com/macros/s/AKfycbz_IYB7bXCJKCotcwkbKxLhm8f9BBge_ZpO_tLczmYgt8oFhjA9ImpaORzmhJzLP74LKA/exec";
 
 // ─── ICONS ────────────────────────────────────────────────────────────────────
 const Icon = ({ path, size = 20, strokeWidth = 1.5 }) => (
@@ -25,7 +25,7 @@ const I = {
   eyeOff: "M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24 M1 1l22 22",
   star: "M12 2l3.09 6.26L22 9.27l-5 4.87 1.18 6.88L12 17.77l-6.18 3.25L7 14.14 2 9.27l6.91-1.01L12 2z",
   trending: "M23 6l-9.5 9.5-5-5L1 18",
-  lock: "M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0 0-2-2z M7 11V7a5 5 0 0 1 10 0v4",
+  lock: "M19 11H5a2 2 0 0 0-2 2v7a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7a2 2 0 0-2-2z M7 11V7a5 5 0 0 1 10 0v4",
   x: "M18 6L6 18 M6 6l12 12",
   arrow: "M5 12h14 M12 5l7 7-7 7",
   archive: "M21 8v13H3V8 M1 3h22v5H1z M10 12h4",
@@ -64,6 +64,26 @@ const COUNTRIES = [
   { code:"SG", dial:"+65",  flag:"🇸🇬", name:"Singapore" },
   { code:"JP", dial:"+81",  flag:"🇯🇵", name:"Japan" },
   { code:"IN", dial:"+91",  flag:"🇮🇳", name:"India" },
+];
+
+// ─── CURRENCIES ───────────────────────────────────────────────────────────────
+const CURRENCIES = [
+  { code:"EUR", symbol:"€", name:"Euro" },
+  { code:"USD", symbol:"$", name:"US Dollar" },
+  { code:"GBP", symbol:"£", name:"British Pound" },
+  { code:"BRL", symbol:"R$", name:"Brazilian Real" },
+  { code:"CHF", symbol:"Fr", name:"Swiss Franc" },
+  { code:"JPY", symbol:"¥", name:"Japanese Yen" },
+  { code:"CNY", symbol:"¥", name:"Chinese Yuan" },
+  { code:"AED", symbol:"د.إ", name:"UAE Dirham" },
+  { code:"AOA", symbol:"Kz", name:"Angolan Kwanza" },
+  { code:"ZAR", symbol:"R", name:"South African Rand" },
+  { code:"NGN", symbol:"₦", name:"Nigerian Naira" },
+  { code:"AUD", symbol:"A$", name:"Australian Dollar" },
+  { code:"CAD", symbol:"C$", name:"Canadian Dollar" },
+  { code:"MXN", symbol:"$", name:"Mexican Peso" },
+  { code:"SGD", symbol:"S$", name:"Singapore Dollar" },
+  { code:"INR", symbol:"₹", name:"Indian Rupee" },
 ];
 
 // ─── SCORING ──────────────────────────────────────────────────────────────────
@@ -143,7 +163,8 @@ async function syncToSheets(entry) {
         score:entry.score, classification:entry.classification,
         financial:entry.result?.financial, operational:entry.result?.operational,
         strategic:entry.result?.strategic, risk:entry.result?.risk,
-        budget:entry.data?.budget, financingType:entry.data?.financingType,
+        budget:entry.data?.budget, budgetCurrency:entry.data?.budgetCurrency,
+        financingType:entry.data?.financingType,
         contingency:entry.data?.contingency, teamSize:entry.data?.teamSize,
         priorExperience:entry.data?.priorExperience, marketFit:entry.data?.marketFit,
         timeline:entry.data?.timeline, urgency:entry.data?.urgency,
@@ -218,8 +239,7 @@ const CSS = `
   .bgh:hover{color:#999;background:#F5F5F5;}
   .ibg{display:inline-flex;align-items:center;gap:7px;background:var(--lmp);border:1.5px solid var(--lmd);border-radius:100px;padding:5px 13px;font-size:10px;letter-spacing:2px;text-transform:uppercase;color:#4A5A00;font-weight:600;margin-bottom:20px;}
   .ifs{display:grid;grid-template-columns:1fr 1fr;gap:11px;margin:24px 0;}
-  .ifc{background:#FAFAFA;border:1.5px solid #EEE;border-radius:10px;padding:15px;}
-  .ifc:hover{border-color:var(--lmd);}
+  .ifc{background:#FAFAFA;border:1.5px solid #EEE;border-radius:10px;padding:15px;cursor:default;}
   .fic{width:32px;height:32px;background:var(--lm);border-radius:7px;display:flex;align-items:center;justify-content:center;color:#4A5A00;margin-bottom:9px;}
   .ifc h4{font-size:12px;font-weight:600;color:var(--tx);margin-bottom:3px;}
   .ifc p{font-size:11px;color:var(--mt);line-height:1.5;}
@@ -278,12 +298,15 @@ const CSS = `
   .am2{flex:1;min-width:0;}
   .am2 h4{font-size:14px;font-weight:600;margin-bottom:3px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   .am2 p{font-size:11px;color:var(--mt);}
-  .bb{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--mt);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;padding:6px 0;transition:color .2s;margin-bottom:18px;}
+  .bb{display:flex;align-items:center;gap:7px;font-size:13px;color:var(--mt);cursor:pointer;background:none;border:none;font-family:'DM Sans',sans-serif;padding:6px 0;transition:color .2s;margin-bottom:18px;}
   .bb:hover{color:var(--tx);}
   .csp{background:#F8F8F8;border:1.5px solid #E8E8E8;border-radius:10px;padding:14px 18px;display:flex;align-items:center;gap:14px;margin-bottom:18px;}
   .cav{width:38px;height:38px;background:var(--lm);border-radius:9px;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:15px;font-weight:700;color:var(--tx);flex-shrink:0;}
   .cin h4{font-size:14px;font-weight:600;}
   .cin p{font-size:12px;color:var(--mt);margin-top:2px;display:flex;align-items:center;gap:4px;}
+  /* FOOTER */
+  .ft{padding:14px 36px;border-top:1px solid #EBEBEB;background:#fff;text-align:center;font-size:11px;color:#AAA;letter-spacing:.5px;flex-shrink:0;}
+  .ft span{color:#888;font-weight:500;}
   /* DEV */
   .dsh{min-height:100vh;background:var(--dv);display:flex;flex-direction:column;}
   .dhd{background:var(--dvs);border-bottom:1px solid var(--dvb);padding:14px 32px;display:flex;align-items:center;gap:14px;position:sticky;top:0;z-index:100;}
@@ -338,6 +361,9 @@ const CSS = `
   .dca{width:44px;height:44px;background:var(--dva);border-radius:10px;display:flex;align-items:center;justify-content:center;font-family:'Playfair Display',serif;font-size:17px;font-weight:700;color:var(--tx);flex-shrink:0;}
   .dci h4{font-size:15px;font-weight:600;color:#fff;}
   .dci p{font-size:12px;color:#7AAA10;margin-top:3px;display:flex;align-items:center;gap:5px;}
+  /* DEV FOOTER */
+  .dft{padding:14px 32px;border-top:1px solid var(--dvb);background:var(--dvs);text-align:center;font-size:11px;color:#444;letter-spacing:.5px;flex-shrink:0;}
+  .dft span{color:#666;font-weight:500;}
   /* DEV LOGIN */
   .dlg2{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:var(--dv);padding:24px;}
   .dlc{background:var(--dvs);border:1px solid var(--dvb);border-radius:16px;padding:38px 40px;width:100%;max-width:380px;text-align:center;}
@@ -352,7 +378,7 @@ const CSS = `
   .dlb:disabled{opacity:.5;cursor:not-allowed;}
   /* PRINT */
   @media print{
-    .hd,.nv,.pb,.br2,.ab,.ar,.rtg,.no-print{display:none!important;}
+    .hd,.nv,.pb,.br2,.ab,.ar,.rtg,.no-print,.ft,.dft{display:none!important;}
     .sh,.ct{background:white!important;padding:0!important;}
     .cd{box-shadow:none!important;border:none!important;border-radius:0!important;}
     .ch{background:#E4F577!important;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
@@ -374,6 +400,7 @@ const CSS = `
     .ar{flex-direction:column;align-items:stretch;}
     .dcn{padding:16px 14px 40px;}
     .pr{flex-direction:column;}
+    .ft,.dft{padding:12px 16px;}
   }
 `;
 
@@ -411,20 +438,28 @@ function Gauge({ score, color }) {
   );
 }
 
+// ─── FOOTER ───────────────────────────────────────────────────────────────────
+function Footer({ dark = false }) {
+  return (
+    <footer className={dark ? "dft" : "ft"}>
+      made by <span>Diogo Manuel Fernandes Vinhas</span>
+    </footer>
+  );
+}
+
 // ─── STEPS ────────────────────────────────────────────────────────────────────
 function StepIntro({onNext}){
   return(
     <div className="an">
       <div className="ch"><div className="sl">Welcome</div><h2>ATHENA Pre-Check Tool</h2><p>Institutional-grade diagnostic framework for rapid project viability assessment.</p></div>
       <div className="cb">
-        <div style={{textAlign:"center",paddingTop:6}}><div className="ibg"><Icon path={I.shield} size={10}/> Confidential · Internal Use Only</div></div>
         <div className="ifs">
           {[{i:I.dollar,t:"Financial Analysis",d:"Budget, financing, and contingency at 35% weight."},{i:I.settings,t:"Operational Readiness",d:"Team capacity and infrastructure at 25% weight."},{i:I.target,t:"Strategic Fit",d:"Market alignment and positioning at 25% weight."},{i:I.alert,t:"Risk Profile",d:"Timeline and stakeholder alignment at 15% weight."}].map((f,i)=>(
             <div className="ifc" key={i}><div className="fic"><Icon path={f.i} size={15}/></div><h4>{f.t}</h4><p>{f.d}</p></div>
           ))}
         </div>
         <div className="disc"><div style={{color:"#7AAA10",flexShrink:0,marginTop:1}}><Icon path={I.lock} size={14}/></div><p>This assessment is proprietary and confidential. Results are for internal qualification purposes only.</p></div>
-        <div className="br2" style={{justifyContent:"flex-end"}}><button className="bp bpr" onClick={onNext}>Begin Assessment <Icon path={I.arrow} size={14}/></button></div>
+        <div className="br2" style={{justifyContent:"flex-end"}}><button className="bp bpr" onClick={onNext}>Let's start this <Icon path={I.arrow} size={14}/></button></div>
       </div>
     </div>
   );
@@ -432,7 +467,7 @@ function StepIntro({onNext}){
 
 function StepClient({data,setData,onNext,onBack}){
   const ok=data.clientName&&data.clientPhone&&data.clientCountry;
-  const country=COUNTRIES.find(c=>c.code===(data.clientCountry||"PT"))||COUNTRIES[0];
+  const country=COUNTRIES.find(c=>c.code===data.clientCountry);
   return(
     <div className="an">
       <div className="ch"><div className="sl">Step 1 of 6 — Your Details</div><h2>Client Information</h2><p>Please provide your contact details so we can identify your submission.</p></div>
@@ -442,12 +477,22 @@ function StepClient({data,setData,onNext,onBack}){
         </Field>
         <Field label="WhatsApp Number" sub="Select your country and enter your number">
           <div className="pr">
-            <select className="cs" value={data.clientCountry||"PT"} onChange={e=>setData({...data,clientCountry:e.target.value})}>
-              {COUNTRIES.map(c=><option key={c.code} value={c.code}>{c.flag} {c.dial} — {c.name}</option>)}
+            <select
+              className="cs"
+              value={data.clientCountry||""}
+              onChange={e=>setData({...data,clientCountry:e.target.value})}
+              style={{backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`,backgroundRepeat:"no-repeat",backgroundPosition:"right 10px center",paddingRight:28,minWidth:200,color:data.clientCountry?"var(--tx)":"#999"}}
+            >
+              <option value="" disabled>Select country...</option>
+              {COUNTRIES.map(c=>(
+                <option key={c.code} value={c.code}>
+                  {c.flag} {c.name} ({c.dial})
+                </option>
+              ))}
             </select>
             <input className="fi" type="tel" value={data.clientPhone||""} onChange={e=>setData({...data,clientPhone:e.target.value})} placeholder="912 345 678" style={{flex:1}}/>
           </div>
-          {data.clientPhone&&data.clientCountry&&(
+          {data.clientPhone&&country&&(
             <div style={{fontSize:11,color:"#7AAA10",marginTop:6,display:"flex",alignItems:"center",gap:5}}>
               <Icon path={I.check} size={11}/> Full number: {country.dial} {data.clientPhone}
             </div>
@@ -464,16 +509,40 @@ function StepClient({data,setData,onNext,onBack}){
 }
 
 function StepProjectBasics({data,setData,onNext,onBack}){
-  const ok=data.projectName&&data.projectType&&data.teamSize&&data.priorExperience;
+  const types = data.projectTypes || [];
+  const toggleType = (v) => {
+    const updated = types.includes(v) ? types.filter(t=>t!==v) : [...types, v];
+    setData({...data, projectTypes: updated, projectType: updated.join(", ")});
+  };
+  const ok=data.projectName&&types.length>0&&data.teamSize&&data.priorExperience;
   return(
     <div className="an">
       <div className="ch"><div className="sl">Step 2 of 6</div><h2>Project Fundamentals</h2><p>Core identifiers and organizational capacity.</p></div>
       <div className="cb">
         <Field label="Project Name"><input className="fi" value={data.projectName||""} onChange={e=>setData({...data,projectName:e.target.value})} placeholder="Enter project name"/></Field>
-        <Field label="Project Type">
+        <Field label="Project Type" sub="Select all that apply">
           <div className="rg">
-            {[{v:"development",l:"Real Estate / Development"},{v:"technology",l:"Technology / Software"},{v:"manufacturing",l:"Manufacturing / Industrial"},{v:"services",l:"Professional Services"},{v:"infrastructure",l:"Infrastructure / Energy"},{v:"other",l:"Other / Mixed"}].map(o=><RC key={o.v} value={o.v} label={o.l} sel={data.projectType} onChange={v=>setData({...data,projectType:v})}/>)}
+            {[
+              {v:"footwear",     l:"Footwear"},
+              {v:"clothing",     l:"Clothing"},
+              {v:"home_textile", l:"Home Textile"},
+              {v:"jewellery",    l:"Jewellery"},
+              {v:"handbags",     l:"Handbags"},
+              {v:"other",        l:"Other"},
+            ].map(o=>(
+              <div
+                key={o.v}
+                className={`rc ${types.includes(o.v)?"sl2":""}`}
+                onClick={()=>toggleType(o.v)}
+              >
+                <div style={{width:16,height:16,borderRadius:4,border:`2px solid ${types.includes(o.v)?"var(--lmd)":"#CCC"}`,flexShrink:0,marginTop:2,display:"flex",alignItems:"center",justifyContent:"center",background:types.includes(o.v)?"var(--lm)":"transparent",transition:"all .2s"}}>
+                  {types.includes(o.v)&&<Icon path={I.check} size={10} strokeWidth={2.5}/>}
+                </div>
+                <div className="rt"><strong>{o.l}</strong></div>
+              </div>
+            ))}
           </div>
+          {types.length>0&&<div style={{fontSize:11,color:"#7AAA10",marginTop:6,display:"flex",alignItems:"center",gap:5}}><Icon path={I.check} size={11}/> Selected: {types.map(t=>t.replace("_"," ")).join(", ")}</div>}
         </Field>
         <Field label="Core Team Size" sub="Dedicated full-time personnel"><input className="fi" type="number" min="0" value={data.teamSize||""} onChange={e=>setData({...data,teamSize:e.target.value})} placeholder="e.g. 8"/></Field>
         <Field label="Prior Experience in This Domain">
@@ -492,11 +561,42 @@ function StepProjectBasics({data,setData,onNext,onBack}){
 
 function StepBudget({data,setData,onNext,onBack}){
   const ok=data.budget&&data.financingType&&data.contingency;
+  const currency=CURRENCIES.find(c=>c.code===data.budgetCurrency);
   return(
     <div className="an">
       <div className="ch"><div className="sl">Step 3 of 6</div><h2>Budget & Financing</h2><p>Capital allocation and financing structure assessment.</p></div>
       <div className="cb">
-        <Field label="Total Project Budget (USD)" sub="Include all phases and soft costs"><input className="fi" type="number" min="0" value={data.budget||""} onChange={e=>setData({...data,budget:e.target.value})} placeholder="e.g. 2500000"/></Field>
+        <Field label="Total Project Budget" sub="Include all phases and soft costs">
+          <div className="pr">
+            <select
+              className="cs"
+              value={data.budgetCurrency||""}
+              onChange={e=>setData({...data,budgetCurrency:e.target.value})}
+              style={{backgroundImage:`url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='6'%3E%3Cpath d='M0 0l5 6 5-6z' fill='%23999'/%3E%3C/svg%3E")`,backgroundRepeat:"no-repeat",backgroundPosition:"right 10px center",paddingRight:28,minWidth:160,color:data.budgetCurrency?"var(--tx)":"#999"}}
+            >
+              <option value="" disabled>Currency...</option>
+              {CURRENCIES.map(c=>(
+                <option key={c.code} value={c.code}>
+                  {c.symbol} {c.code} — {c.name}
+                </option>
+              ))}
+            </select>
+            <input
+              className="fi"
+              type="number"
+              min="0"
+              value={data.budget||""}
+              onChange={e=>setData({...data,budget:e.target.value})}
+              placeholder="e.g. 2,500,000"
+              style={{flex:1}}
+            />
+          </div>
+          {data.budget&&currency&&(
+            <div style={{fontSize:11,color:"#7AAA10",marginTop:6,display:"flex",alignItems:"center",gap:5}}>
+              <Icon path={I.check} size={11}/> {currency.symbol}{parseInt(data.budget).toLocaleString()} {data.budgetCurrency}
+            </div>
+          )}
+        </Field>
         <Field label="Financing Status">
           <div className="rg c1">
             {[{v:"confirmed",l:"Fully Confirmed",s:"Funds committed and accessible"},{v:"preapproved",l:"Pre-Approved",s:"Conditional approval in hand"},{v:"inProgress",l:"In Progress",s:"Active applications underway"},{v:"none",l:"Not Yet Secured",s:"Financing not initiated"}].map(o=><RC key={o.v} value={o.v} label={o.l} sub={o.s} sel={data.financingType} onChange={v=>setData({...data,financingType:v})}/>)}
@@ -605,6 +705,7 @@ function ResultsContent({data, result, savedId, devMode=false}){
   const dateStr=new Date().toLocaleDateString("en-US",{dateStyle:"long"});
   const country=COUNTRIES.find(c=>c.code===data.clientCountry);
   const fullPhone=country?`${country.dial} ${data.clientPhone||""}`:data.clientPhone||"";
+  const currency=CURRENCIES.find(c=>c.code===(data.budgetCurrency||"EUR"))||CURRENCIES[0];
   const cc=result.color==="emerald"?"em":result.color==="blue"?"bl":result.color==="amber"?"am":"rd2";
   const bds=[{k:"financial",l:"Financial",w:"35%",c:"#B8CC2A"},{k:"operational",l:"Operational",w:"25%",c:"#3B82F6"},{k:"strategic",l:"Strategic",w:"25%",c:"#8B5CF6"},{k:"risk",l:"Risk",w:"15%",c:"#EF4444"}];
   return(
@@ -686,7 +787,7 @@ function ResultsContent({data, result, savedId, devMode=false}){
             <div style={{background:"#FAFAFA",border:"1.5px solid #EEE",borderRadius:10,padding:"14px 16px"}}>
               <div style={{fontSize:10,fontWeight:700,letterSpacing:"1.5px",textTransform:"uppercase",color:"#999",marginBottom:9}}>Raw Input Data</div>
               <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:"3px 18px"}}>
-                {[["Budget",data.budget?`$${parseInt(data.budget).toLocaleString()}`:"N/A"],["Financing",data.financingType||"N/A"],["Contingency",data.contingency?`${data.contingency}%`:"N/A"],["Team Size",data.teamSize||"N/A"],["Experience",data.priorExperience||"N/A"],["Market Fit",data.marketFit||"N/A"],["Timeline",data.timeline?`${data.timeline} mo`:"N/A"],["Stakeholder",data.stakeholderBuyIn||"N/A"]].map(([k,v])=>(
+                {[["Budget",data.budget?`${currency.symbol}${parseInt(data.budget).toLocaleString()} ${data.budgetCurrency||"EUR"}`:"N/A"],["Financing",data.financingType||"N/A"],["Contingency",data.contingency?`${data.contingency}%`:"N/A"],["Team Size",data.teamSize||"N/A"],["Experience",data.priorExperience||"N/A"],["Market Fit",data.marketFit||"N/A"],["Timeline",data.timeline?`${data.timeline} mo`:"N/A"],["Stakeholder",data.stakeholderBuyIn||"N/A"]].map(([k,v])=>(
                   <div key={k} style={{display:"flex",justifyContent:"space-between",padding:"5px 0",borderBottom:"1px solid #F0F0F0",fontSize:12}}>
                     <span style={{color:"#888"}}>{k}</span><strong style={{color:"#1C1C1C",textTransform:"capitalize"}}>{v}</strong>
                   </div>
@@ -786,7 +887,7 @@ function ClientArchive(){
               {items.map(item=>(
                 <div className="ai" key={item.id} onClick={()=>setSel(item)}>
                   <div className={`asc ${bm[item.color]||"bgb"}`}><span className="asn" style={{color:cm[item.color]||"#2563EB"}}>{item.score}</span></div>
-                  <div className="am2"><h4>{item.projectName}</h4><p>{item.projectType?item.projectType[0].toUpperCase()+item.projectType.slice(1):"Project"} · {new Date(item.date).toLocaleDateString("en-US",{dateStyle:"medium"})}</p></div>
+                  <div className="am2"><h4>{item.projectName}</h4><p>{item.projectType?item.projectType[0].toUpperCase()+item.projectType.slice(1).replace("_"," "):"Project"} · {new Date(item.date).toLocaleDateString("en-US",{dateStyle:"medium"})}</p></div>
                   <span className={`cb2 ${cc2(item.color)}`} style={{fontSize:11,flexShrink:0}}>{item.classification}</span>
                 </div>
               ))}
@@ -798,7 +899,7 @@ function ClientArchive(){
   );
 }
 
-// ─── DEV LOGIN (Gmail 2FA) ────────────────────────────────────────────────────
+// ─── DEV LOGIN ────────────────────────────────────────────────────────────────
 function DevLogin({ onLogin, onBack }) {
   const [stage, setStage] = useState("password");
   const [pw, setPw] = useState("");
@@ -879,6 +980,7 @@ function DevLogin({ onLogin, onBack }) {
           </button>
         )}
       </div>
+      <div style={{marginTop:20,fontSize:11,color:"#333"}}>made by <span style={{color:"#555",fontWeight:500}}>Diogo Vinhas</span></div>
     </div>
   );
 }
@@ -919,6 +1021,7 @@ function DevDashboard(){
 
   if(sel){
     const res=sel.result,d=sel.data;
+    const currency=CURRENCIES.find(c=>c.code===(d.budgetCurrency||"EUR"))||CURRENCIES[0];
     return(
       <div className="dcn an">
         <button className="bb" onClick={()=>setSel(null)} style={{color:"#555"}}><Icon path={I.chevL} size={14}/><span style={{color:"#555"}}>All Submissions</span></button>
@@ -950,7 +1053,7 @@ function DevDashboard(){
         <div className="ddg">
           <div className="ddp" style={{margin:0}}>
             <div className="dse">Raw Inputs</div>
-            {[["Budget",d.budget?`$${parseInt(d.budget).toLocaleString()}`:"N/A"],["Financing",d.financingType||"N/A"],["Contingency",d.contingency?`${d.contingency}%`:"N/A"],["Team Size",d.teamSize||"N/A"],["Experience",d.priorExperience||"N/A"],["Software",d.softwareReady||"N/A"],["Market Fit",d.marketFit||"N/A"],["Competitive",d.competitiveAdv||"N/A"],["Regulatory",d.regulatoryClarity||"N/A"],["Timeline",d.timeline?`${d.timeline} mo`:"N/A"],["Dependencies",d.externalDependencies||"N/A"],["Stakeholders",d.stakeholderBuyIn||"N/A"]].map(([k,v])=>(
+            {[["Budget",d.budget?`${currency.symbol}${parseInt(d.budget).toLocaleString()} ${d.budgetCurrency||"EUR"}`:"N/A"],["Financing",d.financingType||"N/A"],["Contingency",d.contingency?`${d.contingency}%`:"N/A"],["Team Size",d.teamSize||"N/A"],["Experience",d.priorExperience||"N/A"],["Software",d.softwareReady||"N/A"],["Market Fit",d.marketFit||"N/A"],["Competitive",d.competitiveAdv||"N/A"],["Regulatory",d.regulatoryClarity||"N/A"],["Timeline",d.timeline?`${d.timeline} mo`:"N/A"],["Dependencies",d.externalDependencies||"N/A"],["Stakeholders",d.stakeholderBuyIn||"N/A"]].map(([k,v])=>(
               <div className="dfr" key={k}><span className="dfk">{k}</span><span className="dfv">{v}</span></div>
             ))}
           </div>
@@ -1006,7 +1109,7 @@ function DevDashboard(){
                   <td><div style={{fontWeight:600,color:"#fff",fontSize:13}}>{a.clientName||"—"}</div></td>
                   <td style={{color:"#7AAA10",fontSize:12}}>{a.clientPhone||"—"}</td>
                   <td><div style={{fontWeight:500,color:"#CCC",fontSize:12}}>{a.projectName}</div><div style={{fontSize:10,color:"#444",marginTop:2}}>{a.id}</div></td>
-                  <td style={{textTransform:"capitalize",fontSize:12}}>{a.projectType||"—"}</td>
+                  <td style={{textTransform:"capitalize",fontSize:12}}>{(a.projectType||"—").replace("_"," ")}</td>
                   <td><span className={`dtg ${tgC(a.color)}`}>{a.classification}</span></td>
                   <td style={{fontSize:12}}>{a.result?.financial??"—"}</td>
                   <td style={{fontSize:12}}>{a.result?.operational??"—"}</td>
@@ -1028,7 +1131,7 @@ function DevDashboard(){
 const SICONS=[I.shield,I.user,I.briefcase,I.dollar,I.settings,I.phone,I.target];
 
 export default function App(){
-  const [mode,setMode]=useState("client"); // "client" | "devlogin" | "dev"
+  const [mode,setMode]=useState("client");
   const [page,setPage]=useState("wizard");
   const [step,setStep]=useState(0);
   const [data,setData]=useState({});
@@ -1056,6 +1159,7 @@ export default function App(){
           </div>
         </div>
         <DevDashboard/>
+        <Footer dark={true}/>
       </div>
     </>
   );
@@ -1108,6 +1212,7 @@ export default function App(){
             )}
           </div>
         </div>
+        <Footer/>
       </div>
     </>
   );
